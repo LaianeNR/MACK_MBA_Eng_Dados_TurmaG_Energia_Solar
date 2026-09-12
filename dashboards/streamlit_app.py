@@ -1,754 +1,138 @@
 import streamlit as st
 import pandas as pd
 
-# ============================================================
-# CONFIGURAÇÃO
-# ============================================================
+st.set_page_config(page_title="Previsão de Bandeiras", page_icon="⚡", layout="wide", initial_sidebar_state="collapsed")
 
-st.set_page_config(
-    page_title="Energia em Dados",
-    page_icon="☀️",
-    layout="wide",
-    initial_sidebar_state="collapsed",
-)
+st.markdown("""
+<style>
+.stApp {background: radial-gradient(circle at 4% 0%, rgba(255,193,7,.11), transparent 24%), radial-gradient(circle at 96% 4%, rgba(0,119,255,.09), transparent 28%), repeating-linear-gradient(90deg, rgba(16,42,67,.018) 0px, rgba(16,42,67,.018) 1px, transparent 1px, transparent 80px), linear-gradient(180deg, #f7f9fc 0%, #eef3f8 100%);}
+.block-container {max-width:1450px; padding-top:2rem; padding-bottom:4rem;}
+.hero {padding:10px 0 28px; border-bottom:1px solid #d8e2ec; margin-bottom:18px;}
+.hero-topline,.section-number,.info-label,.risk-label {color:#1677ff; font-size:10px; font-weight:800; letter-spacing:1.8px; text-transform:uppercase;}
+.hero-title {font-size:40px; font-weight:850; letter-spacing:-2px; color:#102a43; line-height:1.05;}
+.hero-subtitle,.section-description,.info-text,.risk-caption {color:#627d98;}
+.hero-subtitle {font-size:14px; margin-top:8px;}
+.section {margin-top:34px; margin-bottom:18px; padding-left:15px; border-left:4px solid #f4b942;}
+.section-title {font-size:23px; font-weight:850; color:#102a43; letter-spacing:-.5px;}
+.section-description {font-size:13px; margin-top:5px;}
+.banner {background:radial-gradient(circle at 92% 15%, rgba(255,209,102,.20), transparent 24%), radial-gradient(circle at 70% 100%, rgba(22,119,255,.13), transparent 35%), linear-gradient(135deg,#071d35,#0b3559); border-radius:20px; padding:28px 32px; margin:24px 0; box-shadow:0 14px 40px rgba(7,29,53,.14);}
+.banner-label {color:#8ec5ff; font-size:10px; font-weight:800; letter-spacing:1.5px; text-transform:uppercase;}
+.banner-title {color:#ffd166; font-size:21px; font-weight:850; margin-top:7px;}
+.banner-text {color:#d9e8f5; font-size:13px; line-height:1.7; max-width:950px; margin-top:9px;}
+.kpi,.risk-card,.info-box {background:rgba(255,255,255,.96); border:1px solid #d9e2ec; border-radius:17px; box-shadow:0 8px 25px rgba(16,42,67,.055);}
+.kpi {padding:20px; min-height:125px;}
+.kpi-label {color:#627d98; font-size:10px; font-weight:850; letter-spacing:1px; margin-bottom:10px;}
+.kpi-value {color:#102a43; font-size:27px; font-weight:850; letter-spacing:-1px;}
+.kpi-caption {color:#829ab1; font-size:11px; margin-top:7px;}
+.risk-card {padding:20px; min-height:145px; text-align:center;}
+.risk-label {color:#627d98;}
+.risk-value {color:#102a43; font-size:34px; font-weight:850; margin-top:12px;}
+.risk-caption {color:#829ab1; font-size:11px; margin-top:6px;}
+.info-box {padding:23px; min-height:170px;}
+.info-title {color:#102a43; font-size:18px; font-weight:800; margin-bottom:10px;}
+.info-text {font-size:12px; line-height:1.7;}
+.stTabs [data-baseweb="tab-list"] {gap:28px; border-bottom:1px solid #d9e2ec;}
+.stTabs [data-baseweb="tab"] {font-weight:750; color:#627d98;}
+.stTabs [aria-selected="true"] {color:#102a43 !important;}
+div[data-testid="stDataFrame"] {border:1px solid #d9e2ec; border-radius:14px; overflow:hidden;}
+.footer {text-align:center; color:#829ab1; font-size:10px; padding-top:50px; letter-spacing:.3px;}
+</style>
+""", unsafe_allow_html=True)
 
-# ============================================================
-# IDENTIDADE VISUAL
-# ============================================================
-
-st.markdown(
-    """
-    <style>
-    .stApp {
-        background:
-            radial-gradient(circle at 4% 0%, rgba(255,193,7,.11), transparent 24%),
-            radial-gradient(circle at 96% 4%, rgba(0,119,255,.09), transparent 28%),
-            repeating-linear-gradient(
-                90deg,
-                rgba(16,42,67,.018) 0px,
-                rgba(16,42,67,.018) 1px,
-                transparent 1px,
-                transparent 80px
-            ),
-            linear-gradient(180deg, #f7f9fc 0%, #eef3f8 100%);
-    }
-
-    .block-container {
-        max-width: 1450px;
-        padding-top: 2rem;
-        padding-bottom: 4rem;
-    }
-
-    .hero {
-        padding: 10px 0 28px 0;
-        border-bottom: 1px solid #d8e2ec;
-        margin-bottom: 18px;
-    }
-
-    .hero-topline {
-        color: #1677ff;
-        font-size: 10px;
-        font-weight: 800;
-        letter-spacing: 2px;
-        text-transform: uppercase;
-        margin-bottom: 8px;
-    }
-
-    .hero-title {
-        font-size: 40px;
-        font-weight: 850;
-        letter-spacing: -2px;
-        color: #102a43;
-        line-height: 1.05;
-    }
-
-    .hero-subtitle {
-        color: #627d98;
-        font-size: 14px;
-        margin-top: 8px;
-    }
-
-    .sun {
-        font-size: 36px;
-    }
-
-    .section {
-        margin-top: 34px;
-        margin-bottom: 18px;
-        padding-left: 15px;
-        border-left: 4px solid #f4b942;
-    }
-
-    .section-number {
-        color: #1677ff;
-        font-size: 10px;
-        font-weight: 800;
-        letter-spacing: 1.8px;
-        margin-bottom: 4px;
-    }
-
-    .section-title {
-        font-size: 23px;
-        font-weight: 850;
-        color: #102a43;
-        letter-spacing: -.5px;
-    }
-
-    .section-description {
-        color: #627d98;
-        font-size: 13px;
-        margin-top: 5px;
-    }
-
-    .banner {
-        background:
-            radial-gradient(circle at 92% 15%, rgba(255,209,102,.20), transparent 24%),
-            radial-gradient(circle at 70% 100%, rgba(22,119,255,.13), transparent 35%),
-            linear-gradient(135deg, #071d35, #0b3559);
-        border-radius: 20px;
-        padding: 28px 32px;
-        margin: 24px 0;
-        box-shadow: 0 14px 40px rgba(7,29,53,.14);
-    }
-
-    .banner-label {
-        color: #8ec5ff;
-        font-size: 10px;
-        font-weight: 800;
-        letter-spacing: 1.5px;
-        text-transform: uppercase;
-        margin-bottom: 7px;
-    }
-
-    .banner-title {
-        color: #ffd166;
-        font-size: 21px;
-        font-weight: 850;
-    }
-
-    .banner-text {
-        color: #d9e8f5;
-        font-size: 13px;
-        line-height: 1.7;
-        max-width: 950px;
-        margin-top: 9px;
-    }
-
-    .kpi {
-        background: rgba(255,255,255,.96);
-        border: 1px solid #d9e2ec;
-        border-radius: 17px;
-        padding: 20px;
-        min-height: 125px;
-        box-shadow: 0 8px 25px rgba(16,42,67,.055);
-    }
-
-    .kpi-label {
-        color: #627d98;
-        font-size: 10px;
-        font-weight: 850;
-        letter-spacing: 1px;
-        margin-bottom: 10px;
-    }
-
-    .kpi-value {
-        color: #102a43;
-        font-size: 27px;
-        font-weight: 850;
-        letter-spacing: -1px;
-    }
-
-    .kpi-caption {
-        color: #829ab1;
-        font-size: 11px;
-        margin-top: 7px;
-    }
-
-    .info-box {
-        background: rgba(255,255,255,.94);
-        border: 1px solid #d9e2ec;
-        border-radius: 17px;
-        padding: 23px;
-        min-height: 170px;
-        box-shadow: 0 8px 25px rgba(16,42,67,.045);
-    }
-
-    .info-label {
-        color: #1677ff;
-        font-size: 10px;
-        font-weight: 850;
-        letter-spacing: 1.2px;
-        text-transform: uppercase;
-        margin-bottom: 10px;
-    }
-
-    .info-title {
-        color: #102a43;
-        font-size: 18px;
-        font-weight: 800;
-        margin-bottom: 10px;
-    }
-
-    .info-text {
-        color: #627d98;
-        font-size: 12px;
-        line-height: 1.7;
-    }
-
-    .stTabs [data-baseweb="tab-list"] {
-        gap: 28px;
-        border-bottom: 1px solid #d9e2ec;
-    }
-
-    .stTabs [data-baseweb="tab"] {
-        font-weight: 750;
-        color: #627d98;
-    }
-
-    .stTabs [aria-selected="true"] {
-        color: #102a43 !important;
-    }
-
-    div[data-testid="stDataFrame"] {
-        border: 1px solid #d9e2ec;
-        border-radius: 14px;
-        overflow: hidden;
-    }
-
-    .footer {
-        text-align: center;
-        color: #829ab1;
-        font-size: 10px;
-        padding-top: 50px;
-        letter-spacing: .3px;
-    }
-    </style>
-    """,
-    unsafe_allow_html=True,
-)
-
-# ============================================================
-# CAMINHOS DAS BASES
-# ============================================================
-
-ARQUIVOS = {
-    "Solar": "./trusted/solar_mensal_nacional.parquet",
-    "ENA": "./trusted/ena_mensal.parquet",
-    "Bandeiras": "./trusted/bandeira_mensal.parquet",
-}
-
-# ============================================================
-# FUNÇÕES
-# ============================================================
+# FONTE TEMPORÁRIA: usada apenas para testar o novo layout.
+# Na etapa seguinte será substituída por consultas ao Databricks.
+ARQUIVOS = {"ENA":"./trusted/ena_mensal.parquet", "Bandeiras":"./trusted/bandeira_mensal.parquet"}
 
 @st.cache_data
 def carregar_base(caminho):
-    try:
-        return pd.read_parquet(caminho)
-    except Exception:
-        return None
+    try: return pd.read_parquet(caminho)
+    except Exception: return None
 
-
-def preparar_data(df, coluna="mes"):
-    if df is None:
-        return None
-
-    df = df.copy()
-
-    if coluna in df.columns:
-        df[coluna] = pd.to_datetime(
-            df[coluna].astype(str),
-            errors="coerce"
-        )
-        df = df.dropna(subset=[coluna])
-        df = df.sort_values(coluna).reset_index(drop=True)
-
+def preparar_data(df):
+    if df is None: return None
+    df=df.copy()
+    if "mes" in df.columns:
+        df["mes"]=pd.to_datetime(df["mes"].astype(str), errors="coerce")
+        df=df.dropna(subset=["mes"]).sort_values("mes").reset_index(drop=True)
     return df
 
+def secao(n,t,d):
+    st.markdown(f'<div class="section"><div class="section-number">{n}</div><div class="section-title">{t}</div><div class="section-description">{d}</div></div>', unsafe_allow_html=True)
 
-def numero(valor, casas=0):
-    if valor is None or pd.isna(valor):
-        return "—"
+def banner(l,t,x):
+    st.markdown(f'<div class="banner"><div class="banner-label">{l}</div><div class="banner-title">{t}</div><div class="banner-text">{x}</div></div>', unsafe_allow_html=True)
 
-    if casas == 0:
-        return f"{valor:,.0f}".replace(",", ".")
-    return (
-        f"{valor:,.{casas}f}"
-        .replace(",", "X")
-        .replace(".", ",")
-        .replace("X", ".")
-    )
+def kpi(col,t,v,c):
+    with col: st.markdown(f'<div class="kpi"><div class="kpi-label">{t}</div><div class="kpi-value">{v}</div><div class="kpi-caption">{c}</div></div>', unsafe_allow_html=True)
 
+def risco(col,h):
+    with col: st.markdown(f'<div class="risk-card"><div class="risk-label">RISCO {h}</div><div class="risk-value">—</div><div class="risk-caption">Saída do modelo pendente</div></div>', unsafe_allow_html=True)
 
-def secao(numero_secao, titulo, descricao):
-    st.markdown(
-        f"""
-        <div class="section">
-            <div class="section-number">{numero_secao}</div>
-            <div class="section-title">{titulo}</div>
-            <div class="section-description">{descricao}</div>
-        </div>
-        """,
-        unsafe_allow_html=True,
-    )
+df_ena=preparar_data(carregar_base(ARQUIVOS["ENA"]))
+df_bandeiras=preparar_data(carregar_base(ARQUIVOS["Bandeiras"]))
 
+st.markdown('<div class="hero"><div class="hero-topline">DATA INTELLIGENCE • ELECTRICITY</div><div class="hero-title">⚡ PREVISÃO DE BANDEIRAS</div><div class="hero-subtitle">Inteligência de dados aplicada à antecipação do risco tarifário no setor elétrico brasileiro</div></div>', unsafe_allow_html=True)
 
-def kpi(coluna, titulo, valor, legenda):
-    with coluna:
-        st.markdown(
-            f"""
-            <div class="kpi">
-                <div class="kpi-label">{titulo}</div>
-                <div class="kpi-value">{valor}</div>
-                <div class="kpi-caption">{legenda}</div>
-            </div>
-            """,
-            unsafe_allow_html=True,
-        )
+tab_visao,tab_prev,tab_vars,tab_hist,tab_modelo,tab_met=st.tabs(["🔎 Visão Geral","🤖 Previsão","🌧️ Variáveis","📈 Histórico","🧠 Modelo","📚 Metodologia"])
 
+with tab_visao:
+    banner("01 / VISÃO EXECUTIVA","⚡ ANTECIPAÇÃO DO RISCO TARIFÁRIO","O dashboard apresenta a evolução histórica das bandeiras e prepara a visualização das probabilidades de ocorrência de bandeira vermelha nos horizontes M+1, M+2 e M+3.")
+    secao("01","Indicadores principais","Resumo do estado atual e dos horizontes de previsão.")
+    c1,c2,c3,c4=st.columns(4)
+    kpi(c1,"BANDEIRA ATUAL","—","consulta Databricks na versão final")
+    risco(c2,"M+1"); risco(c3,"M+2"); risco(c4,"M+3")
+    secao("02","O problema em foco","O objetivo é estimar o risco de ocorrência de bandeira vermelha a partir de variáveis disponíveis até o momento da previsão.")
+    a,b=st.columns(2)
+    with a:
+        st.markdown('<div class="info-box"><div class="info-label">TARGET</div><div class="info-title">Bandeira vermelha</div><div class="info-text">A previsão é tratada como uma classificação binária: <b>1 = bandeira vermelha</b> e <b>0 = demais situações</b>.<br><br>O modelo gera uma probabilidade para cada horizonte de previsão.</div></div>',unsafe_allow_html=True)
+    with b:
+        st.markdown('<div class="info-box"><div class="info-label">HORIZONTES</div><div class="info-title">M+1 • M+2 • M+3</div><div class="info-text">A análise considera três horizontes temporais: próximo mês, dois meses à frente e três meses à frente.<br><br>O objetivo é apoiar a antecipação do risco tarifário.</div></div>',unsafe_allow_html=True)
 
-def banner(label, titulo, texto):
-    st.markdown(
-        f"""
-        <div class="banner">
-            <div class="banner-label">{label}</div>
-            <div class="banner-title">{titulo}</div>
-            <div class="banner-text">{texto}</div>
-        </div>
-        """,
-        unsafe_allow_html=True,
-    )
+with tab_prev:
+    banner("02 / MODELO PREDITIVO","🤖 PROBABILIDADE DE BANDEIRA VERMELHA","Os valores abaixo serão alimentados pela saída do modelo preditivo quando a integração com o Databricks estiver concluída.")
+    secao("01","Horizontes de previsão","Probabilidade estimada de ocorrência de bandeira vermelha.")
+    c1,c2,c3=st.columns(3); risco(c1,"M+1"); risco(c2,"M+2"); risco(c3,"M+3")
+    st.info("Aguardando a saída do modelo. Nenhum percentual é inventado nesta etapa.")
+    secao("02","Como interpretar","A probabilidade representa a estimativa do modelo para a classe vermelha.")
+    st.markdown("Se o modelo apresentar 70% para M+1, isso significa que, segundo o modelo e as variáveis fornecidas, a probabilidade estimada de ocorrência de bandeira vermelha no próximo mês é de 70%. A probabilidade não deve ser interpretada como certeza ou causalidade.")
 
+with tab_vars:
+    banner("03 / VARIÁVEIS EXPLICATIVAS","🌧️ O QUE ESTÁ ASSOCIADO AO RISCO TARIFÁRIO?","Visualização dos indicadores climáticos, hidrológicos e energéticos utilizados ou avaliados para a modelagem.")
+    secao("01","Indicadores disponíveis","Exploração dos indicadores presentes na base histórica disponível.")
+    if df_ena is not None and not df_ena.empty:
+        cols=[c for c in df_ena.columns if c!="mes" and pd.api.types.is_numeric_dtype(df_ena[c])]
+        if cols:
+            sel=st.multiselect("Selecione os indicadores",cols,default=cols[:min(3,len(cols))],key="vars")
+            if sel: st.line_chart(df_ena[["mes"]+sel].set_index("mes"),use_container_width=True)
+        else: st.info("A base atual não possui indicadores numéricos disponíveis.")
+    else: st.warning("Base ENA não disponível nesta versão temporária.")
+    secao("02","Variáveis do modelo","Indicadores previstos para a análise final no Databricks.")
+    st.markdown("**Clima:** precipitação média, precipitação acumulada, % da normal, temperatura e umidade.\n\n**Hidrologia:** EAR e ENA.\n\n**Sistema elétrico:** CMO e carga.\n\n**Histórico:** bandeira anterior.")
 
-def grafico(df, coluna_data, coluna_valor, titulo, tipo="line"):
-    if df is None or coluna_data not in df.columns or coluna_valor not in df.columns:
-        st.info(f"Dados insuficientes para o gráfico: {titulo}.")
-        return
-
-    dados = df[[coluna_data, coluna_valor]].copy()
-    dados[coluna_valor] = pd.to_numeric(dados[coluna_valor], errors="coerce")
-    dados = dados.dropna()
-
-    if dados.empty:
-        st.info(f"Não há dados válidos para: {titulo}.")
-        return
-
-    dados = dados.set_index(coluna_data)
-
-    if tipo == "bar":
-        st.bar_chart(dados[coluna_valor], use_container_width=True)
+with tab_hist:
+    banner("04 / SÉRIE HISTÓRICA","📈 COMPORTAMENTO DAS BANDEIRAS","A série histórica permite observar o comportamento das bandeiras e dos indicadores utilizados na análise.")
+    if df_bandeiras is None or df_bandeiras.empty: st.warning("Base histórica de bandeiras não disponível.")
     else:
-        st.line_chart(dados[coluna_valor], use_container_width=True)
-
-
-# ============================================================
-# CARREGAMENTO
-# ============================================================
-
-df_solar = preparar_data(carregar_base(ARQUIVOS["Solar"]))
-df_ena = preparar_data(carregar_base(ARQUIVOS["ENA"]))
-df_bandeiras = preparar_data(carregar_base(ARQUIVOS["Bandeiras"]))
-
-# ============================================================
-# HEADER
-# ============================================================
-
-st.markdown(
-    """
-    <div class="hero">
-        <div class="hero-topline">DATA INTELLIGENCE • ENERGY</div>
-        <div class="hero-title">
-            <span class="sun">☀️</span> ENERGIA EM DADOS
-        </div>
-        <div class="hero-subtitle">
-            Inteligência de dados aplicada ao setor elétrico brasileiro
-        </div>
-    </div>
-    """,
-    unsafe_allow_html=True,
-)
-
-# ============================================================
-# ABAS
-# ============================================================
-
-tab_solar, tab_ena, tab_bandeiras, tab_metodologia = st.tabs(
-    ["☀ Solar", "⚡ ENA", "🏭 Bandeiras", "📚 Metodologia"]
-)
-
-# ============================================================
-# SOLAR
-# ============================================================
-
-with tab_solar:
-
-    if df_solar is None or df_solar.empty:
-        st.error(
-            "A base Solar não pôde ser carregada ou não possui registros válidos. "
-            "Verifique ./trusted/solar_mensal_nacional.parquet."
-        )
-    else:
-        banner(
-            "01 / GERAÇÃO DISTRIBUÍDA",
-            "☀ PANORAMA DA ENERGIA SOLAR",
-            "Acompanhe a expansão da geração distribuída fotovoltaica "
-            "por meio da evolução das conexões, da capacidade instalada "
-            "e dos principais indicadores da série histórica."
-        )
-
-        ultima = df_solar.iloc[-1]
-
-        conexoes = ultima.get("conexoes_acumuladas", None)
-        potencia_mw = ultima.get("potencia_acumulada_mw", None)
-
-        inicio = df_solar["mes"].min().strftime("%m/%Y")
-        fim = df_solar["mes"].max().strftime("%m/%Y")
-
-        secao(
-            "01",
-            "Visão executiva",
-            "Principais indicadores da série histórica disponível."
-        )
-
-        c1, c2, c3, c4 = st.columns(4)
-
-        kpi(c1, "CONEXÕES ACUMULADAS", numero(conexoes), "último período disponível")
-        kpi(c2, "POTÊNCIA ACUMULADA", f"{numero(potencia_mw, 1)} MW", "capacidade instalada")
-        kpi(c3, "PERÍODO ANALISADO", f"{inicio} – {fim}", "série mensal")
-        kpi(c4, "REGISTROS MENSAIS", numero(len(df_solar)), "observações disponíveis")
-
-        secao(
-            "02",
-            "Evolução da geração distribuída",
-            "Crescimento acumulado das conexões e da capacidade fotovoltaica."
-        )
-
-        a, b = st.columns(2)
-
-        with a:
-            st.markdown("**Conexões acumuladas**")
-            grafico(
-                df_solar,
-                "mes",
-                "conexoes_acumuladas",
-                "Conexões acumuladas"
-            )
-
-        with b:
-            st.markdown("**Potência acumulada (MW)**")
-            grafico(
-                df_solar,
-                "mes",
-                "potencia_acumulada_mw",
-                "Potência acumulada"
-            )
-
-        secao(
-            "03",
-            "Expansão da capacidade",
-            "Potência adicionada em cada período da série histórica."
-        )
-
-        st.markdown("**Nova potência instalada por período (kW)**")
-        grafico(
-            df_solar,
-            "mes",
-            "potencia_nova_kw",
-            "Nova potência",
-            tipo="bar"
-        )
-
-        secao(
-            "04",
-            "Visão anual",
-            "Consolidação das novas conexões por ano."
-        )
-
-        anual = (
-            df_solar
-            .assign(ano=df_solar["mes"].dt.year)
-            .groupby("ano", as_index=False)["novas_conexoes"]
-            .sum()
-        )
-
-        anual["ano"] = anual["ano"].astype(str)
-        anual = anual.set_index("ano")
-
-        st.bar_chart(
-            anual["novas_conexoes"],
-            use_container_width=True
-        )
-
-        secao(
-            "05",
-            "Dados consolidados",
-            "Amostra da base utilizada para a visualização."
-        )
-
-        st.dataframe(
-            df_solar.tail(12),
-            use_container_width=True,
-            hide_index=True
-        )
-
-# ============================================================
-# ENA
-# ============================================================
-
-with tab_ena:
-
-    if df_ena is None or df_ena.empty:
-        st.error(
-            "A base ENA não pôde ser carregada ou não possui registros válidos."
-        )
-    else:
-        banner(
-            "02 / ENERGIA NATURAL AFLUENTE",
-            "⚡ ENERGIA NATURAL AFLUENTE",
-            "Exploração visual dos indicadores de Energia Natural Afluente "
-            "disponíveis na base consolidada."
-        )
-
-        secao(
-            "01",
-            "Visão da base ENA",
-            "Indicadores disponíveis e comportamento da série histórica."
-        )
-
-        c1, c2, c3 = st.columns(3)
-
-        kpi(c1, "REGISTROS", numero(len(df_ena)), "observações disponíveis")
-        kpi(c2, "VARIÁVEIS", numero(len(df_ena.columns)), "colunas na base")
-        kpi(
-            c3,
-            "PERÍODO",
-            f"{df_ena['mes'].min().strftime('%m/%Y')} – {df_ena['mes'].max().strftime('%m/%Y')}",
-            "série disponível"
-        )
-
-        secao(
-            "02",
-            "Indicadores ENA",
-            "Evolução temporal dos principais indicadores percentuais."
-        )
-
-        colunas_ena = [
-            c for c in df_ena.columns
-            if c != "mes" and pd.api.types.is_numeric_dtype(df_ena[c])
-        ]
-
-        if colunas_ena:
-            selecionadas = st.multiselect(
-                "Selecione os indicadores",
-                colunas_ena,
-                default=colunas_ena[:min(3, len(colunas_ena))]
-            )
-
-            if selecionadas:
-                dados_ena = df_ena[["mes"] + selecionadas].copy()
-                dados_ena = dados_ena.set_index("mes")
-                st.line_chart(dados_ena, use_container_width=True)
-        else:
-            st.info("Não foram encontradas colunas numéricas na base ENA.")
-
-        secao(
-            "03",
-            "Dados consolidados",
-            "Amostra dos registros mais recentes."
-        )
-
-        st.dataframe(
-            df_ena.tail(12),
-            use_container_width=True,
-            hide_index=True
-        )
-
-# ============================================================
-# BANDEIRAS
-# ============================================================
-
-with tab_bandeiras:
-
-    if df_bandeiras is None or df_bandeiras.empty:
-        st.error(
-            "A base de Bandeiras não pôde ser carregada ou não possui registros válidos."
-        )
-    else:
-        banner(
-            "03 / BANDEIRAS TARIFÁRIAS",
-            "🏭 BANDEIRAS TARIFÁRIAS",
-            "Visualização dos dados históricos de bandeiras tarifárias "
-            "e dos respectivos adicionais registrados."
-        )
-
-        secao(
-            "01",
-            "Visão da base",
-            "Panorama dos registros disponíveis."
-        )
-
-        c1, c2, c3 = st.columns(3)
-
-        kpi(c1, "REGISTROS", numero(len(df_bandeiras)), "observações disponíveis")
-        kpi(c2, "VARIÁVEIS", numero(len(df_bandeiras.columns)), "colunas na base")
-
-        if "NomBandeiraAcionada" in df_bandeiras.columns:
-            categorias = df_bandeiras["NomBandeiraAcionada"].nunique()
-        else:
-            categorias = 0
-
-        kpi(c3, "CATEGORIAS", numero(categorias), "bandeiras identificadas")
-
-        secao(
-            "02",
-            "Evolução das bandeiras",
-            "Comportamento temporal do adicional registrado."
-        )
-
-        coluna_valor = "VlrAdicionalBandeira"
-
-        if coluna_valor in df_bandeiras.columns:
-            dados_bandeiras = df_bandeiras[
-                ["mes", coluna_valor]
-            ].copy()
-
-            dados_bandeiras[coluna_valor] = pd.to_numeric(
-                dados_bandeiras[coluna_valor],
-                errors="coerce"
-            )
-
-            dados_bandeiras = (
-                dados_bandeiras
-                .dropna()
-                .set_index("mes")
-            )
-
-            st.line_chart(
-                dados_bandeiras[coluna_valor],
-                use_container_width=True
-            )
-        else:
-            st.info(
-                "A coluna VlrAdicionalBandeira não está disponível "
-                "na base atual."
-            )
-
-        secao(
-            "03",
-            "Dados consolidados",
-            "Amostra dos registros mais recentes."
-        )
-
-        st.dataframe(
-            df_bandeiras.tail(12),
-            use_container_width=True,
-            hide_index=True
-        )
-
-# ============================================================
-# METODOLOGIA
-# ============================================================
-
-with tab_metodologia:
-
-    banner(
-        "04 / ARQUITETURA DE DADOS",
-        "📚 METODOLOGIA E ESTRUTURA",
-        "Visão geral das bases utilizadas e da arquitetura simplificada "
-        "adotada para disponibilizar os dados em uma camada visual."
-    )
-
-    secao(
-        "01",
-        "Camada de dados",
-        "Bases utilizadas na construção do dashboard."
-    )
-
-    c1, c2 = st.columns(2)
-
-    with c1:
-        st.markdown(
-            """
-            <div class="info-box">
-                <div class="info-label">DATA LAYER</div>
-                <div class="info-title">Camada Trusted</div>
-                <div class="info-text">
-                    Os dados utilizados pelo dashboard são arquivos
-                    em formato Parquet armazenados na camada Trusted
-                    do projeto.
-                    <br><br>
-                    <b>Bases utilizadas:</b><br>
-                    • Solar<br>
-                    • ENA<br>
-                    • Bandeiras tarifárias
-                </div>
-            </div>
-            """,
-            unsafe_allow_html=True,
-        )
-
-    with c2:
-        st.markdown(
-            """
-            <div class="info-box">
-                <div class="info-label">VISUALIZATION LAYER</div>
-                <div class="info-title">Streamlit</div>
-                <div class="info-text">
-                    A aplicação foi construída em Streamlit,
-                    utilizando componentes nativos para facilitar
-                    a exploração visual e a leitura dos indicadores.
-                    <br><br>
-                    O objetivo é transformar as bases tratadas em
-                    uma camada visual de apoio à análise.
-                </div>
-            </div>
-            """,
-            unsafe_allow_html=True,
-        )
-
-    secao(
-        "02",
-        "Arquitetura simplificada",
-        "Fluxo conceitual entre dados e visualização."
-    )
-
-    st.code(
-        """Fontes de dados
-        ↓
-Camada Raw
-        ↓
-Camada Trusted
-        ↓
-Dados consolidados
-        ↓
-Dashboard Streamlit
-        ↓
-Visualização e análise""",
-        language="text",
-    )
-
-    secao(
-        "03",
-        "Transparência da análise",
-        "Indicadores apresentados a partir das bases disponíveis no repositório."
-    )
-
-    st.info(
-        "O dashboard é uma camada de visualização. "
-        "As métricas e gráficos dependem diretamente das bases "
-        "Parquet existentes na camada Trusted."
-    )
-
-# ============================================================
-# RODAPÉ
-# ============================================================
-
-st.markdown(
-    """
-    <div class="footer">
-        ENERGIA EM DADOS • MBA EM ENGENHARIA DE DADOS •
-        Projeto de análise do setor elétrico brasileiro
-    </div>
-    """,
-    unsafe_allow_html=True,
-)
+        secao("01","Histórico das bandeiras","Evolução temporal dos registros disponíveis.")
+        candidatos=[c for c in ["NivelBandeira","nivel_bandeira","VlrAdicionalBandeira","ValorAdicionalBandeira"] if c in df_bandeiras.columns]
+        if candidatos:
+            v=candidatos[0]; dados=df_bandeiras[["mes",v]].copy(); dados[v]=pd.to_numeric(dados[v],errors="coerce"); st.line_chart(dados.dropna().set_index("mes")[v],use_container_width=True)
+        st.dataframe(df_bandeiras.tail(12),use_container_width=True,hide_index=True)
+
+with tab_modelo:
+    banner("05 / AVALIAÇÃO PREDITIVA","🧠 DESEMPENHO DOS MODELOS","Área reservada para apresentar os resultados do treinamento, backtest e avaliação dos modelos para M+1, M+2 e M+3.")
+    secao("01","Horizontes avaliados","Cada horizonte possui um alvo específico de previsão.")
+    st.dataframe(pd.DataFrame({"Horizonte":["M+1","M+2","M+3"],"Alvo":["Bandeira vermelha no mês seguinte","Bandeira vermelha em dois meses","Bandeira vermelha em três meses"],"Status":["Aguardando modelo"]*3}),use_container_width=True,hide_index=True)
+    secao("02","Métricas","Os valores reais serão preenchidos após a validação dos modelos.")
+    c1,c2,c3,c4=st.columns(4); kpi(c1,"ACURÁCIA","—","resultado do backtest"); kpi(c2,"PRECISÃO","—","classe vermelha"); kpi(c3,"RECALL","—","classe vermelha"); kpi(c4,"F1 / ROC-AUC","—","avaliação do modelo")
+
+with tab_met:
+    banner("06 / ARQUITETURA DE DADOS","📚 DADOS → MODELO → PREVISÃO","O dashboard representa a camada de visualização da solução de dados e previsão.")
+    secao("01","Fluxo da solução","Arquitetura conceitual do projeto.")
+    st.code("""Fontes de dados\n        ↓\nCamada Raw\n        ↓\nCamada Trusted\n        ↓\nCamada Refined\n        ↓\nFeature Engineering\n        ↓\nModelo Preditivo\n        ↓\nProbabilidade M+1 / M+2 / M+3\n        ↓\nDashboard Streamlit""",language="text")
+    secao("02","Camada visual","Na versão final, o Streamlit consultará os dados disponibilizados no Databricks.")
+    st.markdown("**Arquitetura planejada:** `Databricks → SQL Warehouse → Streamlit`\n\nO dashboard não substitui as camadas de dados. Ele apresenta indicadores, histórico e resultados produzidos a partir delas.")
+    secao("03","Escopo da previsão","Objetivo da aplicação.")
+    st.markdown("O foco da aplicação é antecipar o risco de ocorrência de **bandeira tarifária vermelha** nos horizontes **M+1, M+2 e M+3**, utilizando variáveis climáticas, hidrológicas e energéticas disponíveis no projeto.")
+
+st.markdown('<div class="footer">PREVISÃO DE BANDEIRAS • MBA EM ENGENHARIA DE DADOS • Projeto de análise preditiva do setor elétrico brasileiro</div>',unsafe_allow_html=True)
